@@ -1,0 +1,23 @@
+pipeline {
+  agent any
+  stages {
+    stage('Back-end') {
+      steps {
+        script {
+          def backend = docker.image('maven:3.8.1-adoptopenjdk-11')
+          backend.pull()
+          backend.run('-d --name backend-container')
+        }
+      }
+    }
+    stage('Front-end') {
+      steps {
+        script {
+          def frontend = docker.image('node:16-alpine')
+          frontend.pull()
+          frontend.run('-d --name frontend-container')
+        }
+      }
+    }
+  }
+}
