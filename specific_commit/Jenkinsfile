@@ -1,1 +1,33 @@
+pipeline {
+    agent any
+    environment {
+        TARGET_COMMIT = "9691218c77864490233c20a98403a63d295563e8"
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/vamshireddy903/jenkins.git'
+            }
+        }
+        stage('Check Commit') {
+            steps {
+                script {
+                    def lastCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    if (lastCommit != env.TARGET_COMMIT) {
+                        echo "Commit ${lastCommit} is not the target. Aborting build"
+                        currentBuild.result = 'ABORTED'
+                        error("Not the target commit")
+                    } else {
+                        echo "Target commit detected. Proceeding"
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                echo "Building commit ${env.TARGET_COMMIT}..."
+            }
+        }
+    }
+}
 
