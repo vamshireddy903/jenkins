@@ -21,7 +21,7 @@ pipeline {
                 script{
                     sh '''
                     echo 'Buid Docker Image'
-                    docker build -t vamshi589/cicd-e2e:${BUILD_NUMBER} ./python-jenkins-argocd-k8s
+                    docker build -t vamshi589/cicd-e2e:${IMAGE_TAG} ./python-jenkins-argocd-k8s
                     '''
                 }
             }
@@ -29,39 +29,41 @@ pipeline {
 
         stage('Push the artifacts'){
            steps{
-                script{
-                    sh '''
-                    echo 'Push to Repo'
-                    docker push vamshi589/cicd-e2e:${BUILD_NUMBER}
-                    '''
+               withCredentials([usernamePassword(credentialsId: 'f3db709f-b54a-4cb0-8fcb-018e0e679f62', passwordVariable: 'DOCKER_PASSWD', usernameVariable: 'DOCKER_USERNAME')]) {
+                   sh '''
+                    echo "Logging into Docker Hub"
+                    echo "$DOCKER_PASSWD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    echo "Pushing Docker image"
+                    docker push vamshi589/cicd-e2e:${IMAGE_TAG}
+                   '''           
                 }
             }
         }
         
-        stage('Checkout K8S manifest SCM'){
-            steps {
-                git credentialsId: '233148ec-6b69-49db-8cf9-1d1e01b36bc0', 
-                url: 'https://github.com/vamshireddy903/jenkins.git',
-                branch: 'main'
-            }
-        }
-        
-        stage('Update K8S manifest & push to Repo'){
-            steps {
-                script{
-                    withCredentials([usernamePassword(credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                        sh '''
-                        cat python-jenkins-argocd-k8s/deploy/deploy.yaml
-                        sed -i "s|image: .*|image: vamshi589/cicd-e2e:${BUILD_NUMBER}|" python-jenkins-argocd-k8s/deploy/deploy.yaml
-                        cat python-jenkins-argocd-k8s/deploy/deploy.yaml
-                        git add deploy/deploy.yaml
-                        git commit -m "Updated deploy.yaml with build ${BUILD_NUMBER}" || echo "No changes to commit"
-                        git remote -v
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/vamshireddy903/jenkins.git HEAD:main
-                        '''                        
-                    }
-                }
-            }
+        stage('Update K8S manifest & push to Repo') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670',
+                passwordVariable: 'GIT_PASSWORD',
+                usernameVariable: 'GIT_USERNAME'
+            )
+        ]) {
+            sh '''
+                cat python-jenkins-argocd-k8s/deploy/deploy.yaml
+
+                sed -i "s|image: .*|image: vamshi589/cicd-e2e:${BUILD_NUMBER}|" python-jenkins-argocd-k8s/deploy/deploy.yaml
+
+                cat python-jenkins-argocd-k8s/deploy/deploy.yaml
+
+                git add python-jenkins-argocd-k8s/deploy/deploy.yaml
+
+                git commit -m "Updated deploy.yaml with build ${IMAGE_TAG}" || echo "No changes to commit"
+
+                git remote -v
+
+                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/vamshireddy903/jenkins.git HEAD:main
+            '''
         }
     }
 }
