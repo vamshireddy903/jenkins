@@ -10,7 +10,7 @@ pipeline {
         
         stage('Checkout'){
            steps {
-                git credentialsId: '233148ec-6b69-49db-8cf9-1d1e01b36bc0', 
+                git credentialsId: 'd3872678-8ff6-4de6-ab68-f63785c8a52a', 
                 url: 'https://github.com/vamshireddy903/jenkins.git',
                 branch: 'main'
            }
@@ -29,7 +29,7 @@ pipeline {
 
         stage('Push the artifacts'){
            steps{
-               withCredentials([usernamePassword(credentialsId: 'f3db709f-b54a-4cb0-8fcb-018e0e679f62', passwordVariable: 'DOCKER_PASSWD', usernameVariable: 'DOCKER_USERNAME')]) {
+               withCredentials([usernamePassword(credentialsId: '65a424f9-5f41-448d-90f2-7987c7e3ed0a', passwordVariable: 'DOCKER_PASSWD', usernameVariable: 'DOCKER_USERNAME')]) {
                    sh '''
                     echo "Logging into Docker Hub"
                     echo "$DOCKER_PASSWD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -44,7 +44,7 @@ pipeline {
     steps {
         withCredentials([
             usernamePassword(
-                credentialsId: '233148ec-6b69-49db-8cf9-1d1e01b36bc0',
+                credentialsId: 'd3872678-8ff6-4de6-ab68-f63785c8a52a',
                 passwordVariable: 'GIT_PASSWORD',
                 usernameVariable: 'GIT_USERNAME'
             )
@@ -67,6 +67,18 @@ pipeline {
         }
     }
 }
+         stage('Deployment to K8s'){
+           steps {
+               withCredentials([string(credentialsId: 'ac8ca3e4-b772-4a95-9adb-a383e499c884', variable: 'kubeconifg')]) 
+               {
+                   sh '''
+                   kubectl config current-context
+                   kubectl get nodes
+                   kubectl apply -f python-jenkins-argocd-k8s/deploy/deploy.yaml
+                   '''
+               }
+           }
+        }
     }
 }
         
