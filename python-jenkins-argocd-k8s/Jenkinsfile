@@ -72,7 +72,6 @@ pipeline {
                withCredentials([string(credentialsId: 'ac8ca3e4-b772-4a95-9adb-a383e499c884', variable: 'kubeconifg')]) 
                {
                    sh '''
-                   kubectl config current-context
                    kubectl get nodes
                    kubectl apply -f python-jenkins-argocd-k8s/deploy/deploy.yaml
                    '''
