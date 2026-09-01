@@ -69,7 +69,7 @@ pipeline {
 }
          stage('Deployment to K8s'){
            steps {
-               withCredentials([string(credentialsId: 'ac8ca3e4-b772-4a95-9adb-a383e499c884', variable: 'kubeconfig')]) 
+               withCredentials([file(credentialsId: '65a5a0a2-b78e-439a-b8b8-988601be7790', variable: 'kubeconfig')]) 
                {
                    sh '''
                    kubectl get nodes
