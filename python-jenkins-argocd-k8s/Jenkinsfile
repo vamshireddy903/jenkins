@@ -74,7 +74,8 @@ pipeline {
                    sh '''
                    kubectl get nodes
                    kubectl apply -f python-jenkins-argocd-k8s/deploy/deploy.yaml
-                   '''
+                  kubectl apply -f python-jenkins-argocd-k8s/deploy/service.yaml
+                '''
                }
            }
         }
